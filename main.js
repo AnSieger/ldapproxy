@@ -4,12 +4,15 @@ var assert = require('assert');
 var ldap = require('ldapjs');
 var fs = require('fs');
 
-var config = JSON.parse(fs.readFileSync('config.json').toString());
+//var config = JSON.parse(fs.readFileSync('config.json').toString());
+//process.env.SERVER
+//process.env.SEARCH_BASE
 
 var server = ldap.createServer();
 var client = ldap.createClient({
-    url: config.server.url
+    url: process.env.SERVER
 });
+
 
 server.bind("", function(req, res, next) {
     console.log("ldap proxyserver in function: server bind");
@@ -20,8 +23,10 @@ server.bind("", function(req, res, next) {
         console.log("ldap proxyserver try to bind on ldapserver");
         if (err) {
             console.log('client bind error: ' + err);
+            return next(new ldap.InsufficientAccessRightsError());
         } else {
             console.log('client bind successful');
+            res.end();
         }
     });
     client.on('end', function() {
@@ -30,10 +35,9 @@ server.bind("", function(req, res, next) {
     client.on('error', function() {
         process.exit();
     });
-    res.end();
 });
 
-server.search(config.searchbase, function(req, res, next) {
+server.search(process.env.SEARCH_BASE, function(req, res, next) {
     console.log("ldap proxyserver in function: server search");
     //console.log(req);
     //console.log('type: ' + req.type);
@@ -47,29 +51,60 @@ server.search(config.searchbase, function(req, res, next) {
     console.log('search id: ' + id);
     console.log('search base: ' + base);
     console.log('search filter: ' + filter);
-    console.log('search scope: ' + scope);
+    console.log('search scope: ' + scope); 
     var opts = {
         filter: filter,
         scope: scope
     };
+
+    var posixaccount = filter.toLowerCase().includes("posixaccount");
+    var posixgroup = filter.toLowerCase().includes("posixgroup");
+    console.log("searching poxixaccount:" + posixaccount);
+    console.log("searching posixgroup:" + posixgroup);
+    var addattribute = false;
 
     client.search(base, opts, function(err, search) {
         console.log("ldap proxyserver try to search on ldapserver");
         assert.ifError(err);
 
         search.on('searchEntry', function(entry) {
-            //console.log('entry: ' + JSON.stringify(entry.object, null, 2));
-            //console.log(entry.object);
-            //console.log(entry.dn);
-
             var obj = {
                 dn: entry.dn.toString(),
                 attributes: {}
             };
             entry.attributes.forEach(function (a) {
                 obj.attributes[JSON.parse(a).type] = JSON.parse(a).vals;
-                //console.log(JSON.parse(a));
             });
+
+            if(posixaccount){
+                if(obj.attributes.hasOwnProperty("objectClass")){
+                    console.log("Result has an objectClass");
+                    //Check if Posixaccount attribute exist
+                    if(-1 < obj.attributes.objectClass.findIndex(item => "posixaccount" === item.toLowerCase())){
+                        console.log("Result has an posixAccount attribute. Nothing to do");
+                    }else{
+                        obj.attributes.objectClass.push('posixAccount');
+                    }
+                }else{
+                    obj.attributes["objectClass"] = ['posixAccount'];
+                }
+            }
+            
+            if(posixgroup){
+                if(obj.attributes.hasOwnProperty("objectClass")){
+                    console.log("Result has an objectClass");
+                    //Check if posixGroup attribute exist
+                    if(-1 < obj.attributes.objectClass.findIndex(item => "posixgroup" === item.toLowerCase())){
+                        console.log("Result has an posixgroup attribute. Nothing to do");
+                    }else{
+                        obj.attributes.objectClass.push('posixgroup');
+                    }
+                }else{
+                    obj.attributes["objectClass"] = ['posixgroup'];
+                }
+            }
+            
+
             entry.messageID = res.messageID;
             res.send(obj);
         });
@@ -89,17 +124,4 @@ server.search(config.searchbase, function(req, res, next) {
 
 server.listen(389, function() {
     console.log('LDAP server listening at %s', server.url);
-    client.bind(config.server.bindDN, config.server.bindPW, function(err) {
-        if (err) {
-            console.log('client bind error: ' + err);
-        } else {
-            console.log('client bind successful');
-        }
-    });
-    client.on('end', function() {
-        process.exit();
-    });
-    client.on('error', function() {
-        process.exit();
-    });
 });
