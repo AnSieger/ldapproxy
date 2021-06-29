@@ -1,0 +1,9 @@
+{
+  "name": "ldapproxy",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "dependencies": {
+    "ldapjs": "^2.3.0"
+  }
+}

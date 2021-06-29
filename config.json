@@ -1,0 +1,10 @@
+{
+  "bindDN": "uid=an,dc=sieger,dc=org",
+  "bindPW": "Testen123",
+  "searchbase": "dc=openstack,dc=org",
+  "server": {
+    "url":"ldap://192.168.3.123:389",
+    "bindDN": "uid=Tim,ou=Users,dc=openstack,dc=org",
+    "bindPW": "Testen123"
+  }
+}
