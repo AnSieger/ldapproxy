@@ -11,29 +11,30 @@ var client = ldap.createClient({
     url: config.server.url
 });
 
-server.bind(config.bindDN, function(req, res, next) {
-    console.log("function: bind");
-
+server.bind("", function(req, res, next) {
+    console.log("ldap proxyserver in function: server bind");
     var id = req.id.toString();
     var dn = req.dn.toString();
     var pw = req.credentials;
-    console.log('id: ' + id);
-    console.log('requestbind DN: ' + dn);
-    console.log('requestbind DN: ' + config.bindDN);
-    console.log('requestbind PW: ' + pw);
-    console.log('requestbind PW: ' + config.bindPW);
-
-    if(dn !== config.bindDN || pw !== config.bindPW){
-        console.log("Wrong Credentials")
-        return next(new ldap.InvalidCredentialsError());
-    }
-
+    client.bind(dn, pw, function(err) {
+        console.log("ldap proxyserver try to bind on ldapserver");
+        if (err) {
+            console.log('client bind error: ' + err);
+        } else {
+            console.log('client bind successful');
+        }
+    });
+    client.on('end', function() {
+        process.exit();
+    });
+    client.on('error', function() {
+        process.exit();
+    });
     res.end();
-    //return next();
 });
 
 server.search(config.searchbase, function(req, res, next) {
-    console.log("function: server search");
+    console.log("ldap proxyserver in function: server search");
     //console.log(req);
     //console.log('type: ' + req.type);
     //console.log('json: ' + JSON.stringify(req.json, null, 2));
@@ -43,17 +44,17 @@ server.search(config.searchbase, function(req, res, next) {
     var filter = req.filter.toString();
     var scope = req.scope.toString();
 
-    console.log('id: ' + id);
-    console.log('base: ' + base);
-    console.log('filter: ' + filter);
-    console.log('scope: ' + scope);
+    console.log('search id: ' + id);
+    console.log('search base: ' + base);
+    console.log('search filter: ' + filter);
+    console.log('search scope: ' + scope);
     var opts = {
         filter: filter,
         scope: scope
     };
 
     client.search(base, opts, function(err, search) {
-        console.log("function: client search");
+        console.log("ldap proxyserver try to search on ldapserver");
         assert.ifError(err);
 
         search.on('searchEntry', function(entry) {
