@@ -59,9 +59,10 @@ server.search(process.env.SEARCH_BASE, function(req, res, next) {
 
     var posixaccount = filter.toLowerCase().includes("posixaccount");
     var posixgroup = filter.toLowerCase().includes("posixgroup");
+    var groupOfUniqueNames = filter.toLowerCase().includes("groupofuniquenames");
     console.log("searching poxixaccount:" + posixaccount);
     console.log("searching posixgroup:" + posixgroup);
-    var addattribute = false;
+    console.log("searching groupOfUniqueNames:" + groupOfUniqueNames);
 
     client.search(base, opts, function(err, search) {
         console.log("ldap proxyserver try to search on ldapserver");
@@ -76,33 +77,9 @@ server.search(process.env.SEARCH_BASE, function(req, res, next) {
                 obj.attributes[JSON.parse(a).type] = JSON.parse(a).vals;
             });
 
-            if(posixaccount){
-                if(obj.attributes.hasOwnProperty("objectClass")){
-                    console.log("Result has an objectClass");
-                    //Check if Posixaccount attribute exist
-                    if(-1 < obj.attributes.objectClass.findIndex(item => "posixaccount" === item.toLowerCase())){
-                        console.log("Result has an posixAccount attribute. Nothing to do");
-                    }else{
-                        obj.attributes.objectClass.push('posixAccount');
-                    }
-                }else{
-                    obj.attributes["objectClass"] = ['posixAccount'];
-                }
-            }
-            
-            if(posixgroup){
-                if(obj.attributes.hasOwnProperty("objectClass")){
-                    console.log("Result has an objectClass");
-                    //Check if posixGroup attribute exist
-                    if(-1 < obj.attributes.objectClass.findIndex(item => "posixgroup" === item.toLowerCase())){
-                        console.log("Result has an posixgroup attribute. Nothing to do");
-                    }else{
-                        obj.attributes.objectClass.push('posixgroup');
-                    }
-                }else{
-                    obj.attributes["objectClass"] = ['posixgroup'];
-                }
-            }
+            if(posixaccount){addobjectclassattribute(obj,"posixaccount");}
+            if(posixgroup){addobjectclassattribute(obj,"posixgroup");}
+            if(groupOfUniqueNames){addobjectclassattribute(obj,"groupOfUniqueNames");}
             
 
             entry.messageID = res.messageID;
@@ -125,3 +102,52 @@ server.search(process.env.SEARCH_BASE, function(req, res, next) {
 server.listen(389, function() {
     console.log('LDAP server listening at %s', server.url);
 });
+
+function addobjectclassattribute(obj,objectclassname){
+    if(obj.attributes.hasOwnProperty("objectClass")){
+        console.log("Result has an objectClass");
+        //Check if posixGroup attribute exist
+        if(-1 < obj.attributes.objectClass.findIndex(item => objectclassname.toLowerCase() === item.toLowerCase())){
+            console.log("Result has an " + objectclassname + " attribute. Nothing to do");
+        }else{
+            console.log("add " + objectclassname + " attribute");
+            obj.attributes.objectClass.push(objectclassname);
+        }
+    }else{
+        console.log("add objectclass with " + objectclassname + " attribute");
+        obj.attributes["objectClass"] = [objectclassname];
+    }
+    return obj;
+}
+
+/*
+            if(posixaccount){
+                if(obj.attributes.hasOwnProperty("objectClass")){
+                    console.log("Result has an objectClass");
+                    //Check if Posixaccount attribute exist
+                    if(-1 < obj.attributes.objectClass.findIndex(item => "posixaccount" === item.toLowerCase())){
+                        console.log("Result has an posixAccount attribute. Nothing to do");
+                    }else{
+                        obj.attributes.objectClass.push('posixAccount');
+                    }
+                }else{
+                    onsole.log("add objectclass with posixAccount attribute");
+                    obj.attributes["objectClass"] = ['posixAccount'];
+                }
+            }
+            
+            if(posixgroup){
+                if(obj.attributes.hasOwnProperty("objectClass")){
+                    console.log("Result has an objectClass");
+                    //Check if posixGroup attribute exist
+                    if(-1 < obj.attributes.objectClass.findIndex(item => "posixgroup" === item.toLowerCase())){
+                        console.log("Result has an posixgroup attribute. Nothing to do");
+                    }else{
+                        obj.attributes.objectClass.push('posixgroup');
+                    }
+                }else{
+                    console.log("add objectclass with posixgroup attribute");
+                    obj.attributes["objectClass"] = ['posixgroup'];
+                }
+            }
+*/
