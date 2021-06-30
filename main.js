@@ -54,7 +54,8 @@ server.search(process.env.SEARCH_BASE, function(req, res, next) {
     console.log('search scope: ' + scope); 
     var opts = {
         filter: filter,
-        scope: scope
+        scope: scope,
+        paged: true
     };
 
     var posixaccount = filter.toLowerCase().includes("posixaccount");
@@ -90,7 +91,6 @@ server.search(process.env.SEARCH_BASE, function(req, res, next) {
         });
         search.on('error', function(err) {
             console.error('error: ' + err.message);
-            res.error(err);
         });
         search.on('end', function(result) {
             console.log('status: ' + result.status);
