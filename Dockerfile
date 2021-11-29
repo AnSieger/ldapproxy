@@ -5,7 +5,7 @@ RUN mkdir /usr/ldap
 RUN mkdir /usr/ldap/cert
 WORKDIR /usr/ldap
 
-RUN npm install ldapjs
+RUN npm install ldapjs cron
 COPY main.js .
 COPY entrypoint.sh .
 ENTRYPOINT ["bash","entrypoint.sh"]
