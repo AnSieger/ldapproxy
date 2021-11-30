@@ -1,10 +1,12 @@
 # ldapproxy
 
+Published at dockerhub at `ansieger/ldapproxy` and `ansieger/ldapsproxy`
+
 ## Run ldapproxy
 
 Environment variable:
-- SERVER -> Server to connect to
-- SEARCH_BASE -> Position for searching in LDAP tree (serverside)
+- SERVER        ->  Server to connect to
+- SEARCH_BASE   ->  Position for searching in LDAP tree (serverside)
 
 By default the ldapproxy will be reachable at `port 389`.
 

@@ -66,9 +66,9 @@ server.search(process.env.SEARCH_BASE, function(req, res, next) {
     var posixaccount = filter.toLowerCase().includes("posixaccount");
     var posixgroup = filter.toLowerCase().includes("posixgroup");
     var groupOfUniqueNames = filter.toLowerCase().includes("groupofuniquenames");
-    printlog("searching poxixaccount:" + posixaccount);
-    printlog("searching posixgroup:" + posixgroup);
-    printlog("searching groupOfUniqueNames:" + groupOfUniqueNames);
+    printlog("request include poxixaccount: " + posixaccount);
+    printlog("request include posixgroup: " + posixgroup);
+    printlog("request include groupOfUniqueNames: " + groupOfUniqueNames);
 
     client.search(base, opts, function(err, search) {
         printlog("ldap proxyserver try to search on ldapserver");
